@@ -3,7 +3,11 @@ PUM v2 is implemented in AutoHotkey V2, by Sunwind (2026-01-15).
 
 PUM - popup menu
 PUM class - popup menu manager
+PUM_Menu class - representing popup menu
+PUM_Item class  - representing popup menu's item
+pumAPI class - pumAPI is to call the Windows API (TrackPopupMenuEx) to implement an owner-drawn menu.
 
+---------------------------------------------------------------------
  reference to the following documentation，from the archived forums:
  https://www.autohotkey.com/board/topic/73599-ahk-l-pum-owner-drawn-object-based-popup-menu/
 */
