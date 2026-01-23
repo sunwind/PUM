@@ -18,7 +18,11 @@ pumAPI class - pumAPI is to call the Windows API (TrackPopupMenuEx) to implement
     * Change
     ^ Update
 ==================
-2026-01-23  修复菜单点击之后，窗体没有销毁，还在后台问题
+Fix 2026-01-23  
+1）修复菜单点击之后，窗体没有销毁，还在后台问题；
+2）修改drawing submenu arrow代码：
+bmWidth 从15改成25； 
+bmX 从 Round(right - 15)改成 Round(right - bmWidth / 1.2)；
 
 */
 class PUM extends PUM_base
@@ -973,6 +977,7 @@ PUM_OnDraw(wParam, lParam, msg, hwnd) {
         pumAPI.DrawText(hDC, item.name, textRect.Ptr, textFlags)
         pumAPI.SelectObject(hDC, hfontOld)
       }
+      ;drawing icon
       if (!itemNoIcons && item.GetIconHandle()
           && ((itemAction = pumAPI.ODA_SELECT && selMethod = "fill") || itemAction = pumAPI.ODA_DRAWENTIRE)) {
         pumAPI.DrawIconEx(hDC
@@ -980,22 +985,34 @@ PUM_OnDraw(wParam, lParam, msg, hwnd) {
                     , top + item._y_icon
                     , item.GetIconHandle())
       }
+      ;drawing submenu arrow
       if item.assocMenu
           && ((itemAction = pumAPI.ODA_SELECT && selMethod = "fill") || itemAction = pumAPI.ODA_DRAWENTIRE) {
-        bmWidth := 15
+        ;code took from here: http://www.codeguru.com/cpp/controls/menu/miscellaneous/article.php/c13017/Owner-Drawing-the-Submenu-Arrow.htm
+        ; bmWidth := 15
+        bmWidth := 25
         bmHeight := bottom - top
+        ;calculating it's pos
         bmY := Round(top - ((bottom - top) - bmHeight) / 2)
-        bmX := Round(right - 15)
+        ; bmX := Round(right - 15)
+        bmX := Round(right - bmWidth / 1.2)
+        
+        ;drawing arrow in the colors we need
         arrowDC := pumAPI.CreateCompatibleDC(hDC)
         fillDC := pumAPI.CreateCompatibleDC(hDC)
         arrowBM := pumAPI.CreateCompatibleBitmap(hDC, bmWidth, bmHeight)
         fillBM := pumAPI.CreateCompatibleBitmap(hDC, bmWidth, bmHeight)
         oldArrowBitmap := pumAPI.SelectObject(arrowDC, arrowBM)
         oldFillBitmap := pumAPI.SelectObject(fillDC, fillBM)
+        ;Set the offscreen arrow rect
         pumAPI.SetRect(tmpArrowR, 0, 0, bmWidth, bmHeight)
+        ;Draw the frame control arrow (The OS draws this as a black on
+        ;                            white bitmap mask)
         pumAPI.DrawFrameControl(arrowDC, tmpArrowR.Ptr, 2, 0)
+        ;Fill the fill bitmap with the arrow color
         clr := isItemSelected ? selTColor : tcolor
         pumAPI.FillRect(fillDC, tmpArrowR.Ptr, clr)
+        ;Blit the items in a masking fashion
         pumAPI.BitBlt(hDC, bmX, bmY, bmWidth, bmHeight, fillDC, 0, 0, 0x00660046)
         pumAPI.BitBlt(hDC, bmX, bmY, bmWidth, bmHeight, arrowDC, 0, 0, 0x008800C6)
         pumAPI.BitBlt(hDC, bmX, bmY, bmWidth, bmHeight, fillDC, 0, 0, 0x00660046)
@@ -1008,7 +1025,8 @@ PUM_OnDraw(wParam, lParam, msg, hwnd) {
       }
     }
   }
-  pumAPI.ExcludeClipRect(hDC, left, top, right, bottom)
+  ;This call basically is what stops the OS from drawing the submenu arrow
+  pumAPI.ExcludeClipRect(hDC, left, top, right, bottom)  ;avoid submenu arrow drawing
   return true
 }
 
