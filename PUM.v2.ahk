@@ -1,6 +1,5 @@
 /* 
 PUM v2 is implemented in AutoHotkey V2, by Sunwind (2026-01-15).
-
 PUM - popup menu
 PUM class - popup menu manager
 PUM_Menu class - representing popup menu
@@ -10,6 +9,17 @@ pumAPI class - pumAPI is to call the Windows API (TrackPopupMenuEx) to implement
 ---------------------------------------------------------------------
  reference to the following documentation，from the archived forums:
  https://www.autohotkey.com/board/topic/73599-ahk-l-pum-owner-drawn-object-based-popup-menu/
+ 
+  Legend:
+==================
+    + Add
+    - Remove
+    ! Fix
+    * Change
+    ^ Update
+==================
+2026-01-23  修复菜单点击之后，窗体没有销毁，还在后台问题
+
 */
 class PUM extends PUM_base
 {
@@ -574,7 +584,8 @@ class PUM_Menu extends PUM_base
         PUMGui.Title := "PUM_Menu1"
       }
       ; PUMGui.Show("NoActivate w0 h0 x-32000 y-32000")
-      PUMGui.Show("Minimize")
+      ;PUMGui.Show("Minimize")
+      PUMGui.Show("NoActivate w0 h0 x-32000 y-32000")
       PUMhParent := PUMGui.Hwnd
       WinActivate("ahk_id " PUMhParent)
       pumAPI._msgMonitor(true)
@@ -585,7 +596,8 @@ class PUM_Menu extends PUM_base
         PUMGui := Gui("+LastFoundExist")
         PUMGui.Title := "PUM_Menu2"
         ; PUMGui.Show("NoActivate w0 h0 x-32000 y-32000")
-        PUMGui.Show("Minimize")
+        ; PUMGui.Show("Minimize")
+        PUMGui.Show("NoActivate w0 h0 x-32000 y-32000")
       }
       PUMhParent := PUMGui.Hwnd
     }
@@ -610,7 +622,11 @@ class PUM_Menu extends PUM_base
     
     if !isContext {
       pumAPI._msgMonitor(false)
-      pumAPI.DestroyWindow(PUMhParent)
+      ; pumAPI.DestroyWindow(PUMhParent)
+      if IsSet(PUMGui) {
+        PUMGui.Destroy()
+        PUMGui := Unset
+      }
       foo := this.objPUM.onclose
       if foo {
          if IsObject(foo)
